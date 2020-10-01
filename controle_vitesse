@@ -1,0 +1,53 @@
+Spyder Editor
+
+This is a temporary script file.
+"""
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+class Car():
+    def __init__(self,vi,kp):
+        self.kp = kp #proportional gain
+        self.m = 5 #mass in kg
+        self.kt = 0.0273 #torque cst of motor in Nm/A
+        self.v = vi #vehicule speed in m/s
+        self.x = 0 #vehicule position in m
+        self.radius = 0.057 #radius of the wheel in m
+        self.t = 0
+        self.make_plot = False
+        
+    def PID(self):
+        e = vref - self.v
+        P = e*self.kp
+        PID = P
+        return PID
+    
+    def Boucle(self):
+        PID = self.PID()
+        torque = PID*self.kt
+        accel = torque*self.m/self.radius
+        self.v += accel*dt
+        self.x += self.v*dt
+        self.t += dt
+        if self.make_plot:
+            self.plot()
+    
+    def plot(self):
+        time.append(self.t) 
+        position_vector.append(self.x)
+        velocity_vector.append(self.v)
+        
+
+dt = 0
+vref = 10
+car = Car(0,1)
+time = np.array([0])
+position_vector = np.array([0])
+velocity_vector = np.array([0])
+
+while vref - car.v > 0.1:
+    car.Boucle()
+    
+if car.make_plot:
+    plt.plot(car.t,car.v)
