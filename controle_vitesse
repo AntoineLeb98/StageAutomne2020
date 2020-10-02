@@ -1,53 +1,93 @@
-Spyder Editor
-
-This is a temporary script file.
+# -*- coding: utf-8 -*-
 """
-import numpy as np
+Created on Fri Oct  2 14:34:25 2020
+
+@author: antoi
+"""
+
 import matplotlib.pyplot as plt
 
-
 class Car():
-    def __init__(self,vi,kp):
-        self.kp = kp #proportional gain
+    def __init__(self,vi):
+        #Vehicule and motor properties
         self.m = 5 #mass in kg
         self.kt = 0.0273 #torque cst of motor in Nm/A
-        self.v = vi #vehicule speed in m/s
-        self.x = 0 #vehicule position in m
         self.radius = 0.057 #radius of the wheel in m
-        self.t = 0
-        self.make_plot = False
+        self.current_max = 4.12 #max current in motor in A
+        
+        #Initial conditions
+        self.t = 0 #time s
+        self.x = 0 #vehicule position in m
+        self.v = vi #vehicule speed in m/s
+        self.torque = 0 #initial toque Nm
+        
+        #PID gains
+        self.kp = 1 #proportional gain
+        
+        #Make plot       
+        self.make_plot = True
         
     def PID(self):
         e = vref - self.v
         P = e*self.kp
-        PID = P
-        return PID
-    
+        cmd = P
+        return cmd
+
     def Boucle(self):
-        PID = self.PID()
-        torque = PID*self.kt
-        accel = torque*self.m/self.radius
+        cmd = self.PID()
+        if cmd > self.current_max:
+            cmd = self.current_max
+            
+        current_vector.append(cmd)
+        
+        self.torque = cmd*self.kt
+        
+        accel = self.torque*self.m/self.radius
         self.v += accel*dt
         self.x += self.v*dt
         self.t += dt
+        
         if self.make_plot:
             self.plot()
-    
+
     def plot(self):
-        time.append(self.t) 
+        time.append(self.t)
         position_vector.append(self.x)
         velocity_vector.append(self.v)
-        
+        torque_vector.append(self.torque)
 
-dt = 0
+
+dt = 0.1
 vref = 10
-car = Car(0,1)
-time = np.array([0])
-position_vector = np.array([0])
-velocity_vector = np.array([0])
+car = Car(0)
+time = [0]
+position_vector = [0]
+velocity_vector = [0]
+torque_vector = [0]
+current_vector = [0]
+i=0
 
 while vref - car.v > 0.1:
     car.Boucle()
-    
+    i += 1
+
 if car.make_plot:
-    plt.plot(car.t,car.v)
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
+    fig.suptitle('Commandes en fonction du temps')
+    ax1.plot(time, position_vector)
+    ax1.set_title('Position')
+    ax1.set(ylabel = 'Position (m)')
+    
+    ax2.plot(time, velocity_vector, 'tab:orange')
+    ax2.set_title('Vitesse')
+    ax2.set(ylabel = 'Vitesse (m/s)')
+    
+    ax3.plot(time, torque_vector, 'tab:green')
+    ax3.set_title('Torque')
+    ax3.set(ylabel = 'Torque (Nm)')
+    
+    ax4.plot(time, current_vector, 'tab:red')
+    ax4.set_title('Courant')
+    ax4.set(ylabel = 'Courant (A)')
+    
+    plt.show()
