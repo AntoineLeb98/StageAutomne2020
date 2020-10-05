@@ -1,73 +1,97 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Oct  2 14:34:25 2020
+Spyder Editor
 
-@author: antoi
+This is a temporary script file.
 """
 
 import matplotlib.pyplot as plt
 
 class Car():
-    def __init__(self,vi):
-        #Vehicule and motor properties
+    def __init__(self,vref):
+        #Vehicule,motor and other properties
         self.m = 5 #mass in kg
         self.kt = 0.0273 #torque cst of motor in Nm/A
         self.radius = 0.057 #radius of the wheel in m
         self.current_max = 4.12 #max current in motor in A
+        self.drag_coef = 0.75 #drag coefficient       
+        self.rho = 1.2754 #air density in kg/m³
+        self.car_surf = 0.05 #vehicule surface
         
         #Initial conditions
+        self.dt = 0.1 #time 
         self.t = 0 #time s
         self.x = 0 #vehicule position in m
-        self.v = vi #vehicule speed in m/s
-        self.torque = 0 #initial toque Nm
+        self.v = 0 #vehicule speed in m/s
+        self.torque = 0 #initial toque in Nm
+        self.cmd = 0 #Initial curent to motors in A
         
+        #goals
+        self.vref = vref
         #PID gains
         self.kp = 1 #proportional gain
         
-        #Make plot       
+        #Bool conditions       
         self.make_plot = True
+        self.calculate_drag = True
         
     def PID(self):
-        e = vref - self.v
+        #Error
+        e = self.vref - self.v
+        
+        #Proportional comand
         P = e*self.kp
+        
+        #Command in curent
         cmd = P
         return cmd
 
     def Boucle(self):
-        cmd = self.PID()
-        if cmd > self.current_max:
-            cmd = self.current_max
-            
-        current_vector.append(cmd)
+        #Curent to motors 
+        self.cmd = self.PID() 
+        if self.cmd > self.current_max:
+            self.cmd = self.current_max
         
-        self.torque = cmd*self.kt
+        #Torque at wheels
+        self.torque = self.cmd * self.kt
         
-        accel = self.torque*self.m/self.radius
-        self.v += accel*dt
-        self.x += self.v*dt
-        self.t += dt
+        #Aerodynamic drag
+        drag = 0
+        if self.calculate_drag:
+            drag = self.v * self.v * self.car_surf * self.rho * self.drag_coef / 2
+        
+        
+        #Vehicula acceleration
+        accel = (self.torque/self.radius - drag)/self.m
+        
+        #New state of vehicule
+        self.v += accel * self.dt
+        self.x += self.v * self.dt
+        self.t += self.dt
         
         if self.make_plot:
             self.plot()
 
     def plot(self):
+        #plot data
         time.append(self.t)
         position_vector.append(self.x)
         velocity_vector.append(self.v)
         torque_vector.append(self.torque)
+        current_vector.append(self.cmd)
 
+#Initialize vehicule
+car = Car(10)
+i = 0
 
-dt = 0.1
-vref = 10
-car = Car(0)
+#Vectors for plots
 time = [0]
 position_vector = [0]
 velocity_vector = [0]
 torque_vector = [0]
 current_vector = [0]
-i=0
 
-while vref - car.v > 0.1:
+while i < 1000:
     car.Boucle()
     i += 1
 
