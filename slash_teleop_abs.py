@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import rospy
-import numpy as np
 from sensor_msgs.msg import Joy
 from geometry_msgs.msg import Twist
 
@@ -50,12 +49,12 @@ class teleop(object):
                 self.cmd_msg.linear.z  = 3  # Control mode
                 
             #If button B is active 
-            elif(joy_msg.buttons[2]):   
+            # elif(joy_msg.buttons[2]):   
                 
-                # Closed-loop velocity, Closed-loop steering 
-                self.cmd_msg.linear.x  = propulsion_user_input * self.max_vel #[m/s]
-                self.cmd_msg.angular.z = steering_user_input # [m]
-                self.cmd_msg.linear.z  = 5  # Control mode
+            #     # Closed-loop velocity, Closed-loop steering 
+            #     self.cmd_msg.linear.x  = propulsion_user_input * self.max_vel #[m/s]
+            #     self.cmd_msg.angular.z = steering_user_input # [m]
+            #     self.cmd_msg.linear.z  = 5  # Control mode
                 
             #If button x is active 
             elif(joy_msg.buttons[0]):   
@@ -94,14 +93,23 @@ class teleop(object):
                 self.cmd_msg.angular.z = 0
                 self.cmd_msg.linear.z  = 0 # Control mode
                 
-            #If RT is active 
+            #If L1 is active 
             elif (joy_msg.buttons[5]):
                 
-                # Template
-                self.cmd_msg.linear.x  = propulsion_user_input
-                self.cmd_msg.angular.z = 0
-                self.cmd_msg.linear.z  = 7 # Control mode
-
+                #If B button and R1 are active
+                if (joy_msg.button[2]):
+                    # Template
+                    self.cmd_msg.linear.x  = 0
+                    self.cmd_msg.angular.z = 0
+                    self.cmd_msg.linear.z  = 8 # Control mode
+                
+                #If only R1 is active
+                else:
+                    # Template
+                    self.cmd_msg.linear.x  = propulsion_user_input
+                    self.cmd_msg.angular.z = 0
+                    self.cmd_msg.linear.z  = 7 # Control mode
+                    
             # Defaults operation
             # No active button
             else:
