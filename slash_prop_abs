@@ -48,7 +48,7 @@ const unsigned long baud_rate = 115200;
 const int slaveSelectEnc = 45;
 
 // Pins for outputs PWM
-const int enable_pin      = 8;   // Pin for enable signal
+const int enable_pin      = 11;   // Pin for enable signal
 const int ser_pin         = 9;      // Servo 
 const int maxon_pin       = 10;   // PWM sent to Maxon Drive
 
@@ -116,15 +116,24 @@ signed long enc_old   = 0;
 float pos_now   = 0;
 float vel_now   = 0;
 float vel_old   = 0;
+float vel_fil   = 0;
+float vel_raw   = 0;
+float alpha     = 0;
 
 float vel_error_int = 0 ;
 float pos_error_int = 0;
+
+float vel_ref, vel_error;
+int kp_8, ki_8;
 
 // Loop timing
 unsigned long time_now       = 0;
 unsigned long time_last_low  = 0;
 unsigned long time_last_high = 0;
 unsigned long time_last_com  = 0; //com watchdog
+
+
+    
 
 
 ///////////////////////////////////////////////////////////////////
@@ -322,9 +331,9 @@ void ctl(){
   // Velocity computation
 
   //TODO: VOUS DEVEZ COMPLETEZ LA DERIVEE FILTRE ICI
-  float vel_raw = (enc_now - enc_old) * tick2m / time_period_low * 1000;
-  float alpha   = 0; // TODO
-  float vel_fil = vel_raw;    // Filter TODO
+  vel_raw = (enc_now - enc_old) * tick2m / time_period_low * 1000;
+  alpha   = time_period_low / (filter_rc + time_period_low); // TODO
+  vel_fil = alpha * vel_raw + ( 1 - alpha) * vel_old;    // Filter TODO
   
   // Propulsion Controllers
   
@@ -401,17 +410,49 @@ void ctl(){
   }
   ///////////////////////////////////////////////////////
   else if (ctl_mode == 7){
-    // Reset encoder counts
-    
-    clearEncoderCount();
-    
+
     // reset integral actions
     vel_error_int = 0 ;
     pos_error_int = 0 ;
     
     digitalWrite(enable_pin,HIGH);
-    dri_cmd = dri_ref*90 + 90;
+    dri_cmd = dri_ref * 90 + 90;
     Maxon.write(dri_cmd);
+    
+  }
+
+  ///////////////////////////////////////////////////////
+  else if (ctl_mode == 8){
+    
+    digitalWrite(enable_pin,HIGH);
+
+    vel_ref = 0;
+    vel_error = vel_ref - vel_fil;
+    vel_error_int = vel_error_int + vel_error * time_period_low * 0.001;
+    
+    kp_8 = 1000;
+    ki_8 = 0;
+
+    
+    dri_cmd = 90 + vel_error * kp_8 + vel_error_int * ki_8;
+    
+    if (dri_cmd > 180) {
+      dri_cmd = 180;
+    }
+    else if (dri_cmd < 0) {
+      dri_cmd = 0;
+    }
+
+
+
+    if (vel_fil > 0.01) {
+      Maxon.write(dri_cmd);
+    }
+    else if (vel_fil <= 0.01) {
+      Maxon.write(90);
+    }
+
+    
     
   }
   ////////////////////////////////////////////////////////
@@ -522,7 +563,7 @@ void loop(){
 
     // Feedback loop
     prop_sensors_data[0] = pos_now; // wheel position in m
-    prop_sensors_data[1] = vel_old; // wheel velocity in m/sec
+    prop_sensors_data[1] = vel_fil; // wheel velocity in m/sec
     
     // For DEBUG
     prop_sensors_data[2] = dri_ref; // set point received by arduino
@@ -532,6 +573,8 @@ void loop(){
     prop_sensors_data[6] = ser_ref; // steering angle
     prop_sensors_data[7] = (float)( time_now - time_last_com ); // for com debug
     prop_sensors_data[8] = (float)dt;
+    prop_sensors_data[9] = vel_error;
+    prop_sensors_data[10]= vel_ref;
 
     // Read IMU
     //imu.readSensor();
