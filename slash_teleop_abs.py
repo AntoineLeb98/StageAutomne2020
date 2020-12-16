@@ -25,8 +25,8 @@ class teleop(object):
         """ """
     
         propulsion_user_input = joy_msg.axes[4]    # Up-down Right joystick 
-        #if (-5000 <= propulsion_user_input <= 5000)
-        #    propulsion_user_input = 0
+        if (propulsion_user_input >= -5000) and (propulsion_user_input <= 5000):
+            propulsion_user_input = 0
 
         steering_user_input   = joy_msg.axes[0]    # Left-right left joystick
         
