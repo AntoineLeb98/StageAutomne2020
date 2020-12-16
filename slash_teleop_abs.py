@@ -24,84 +24,48 @@ class teleop(object):
     def joy_callback( self, joy_msg ):
         """ """
     
-        propulsion_user_input = joy_msg.axes[5]    # Up-down Right joystick 
+        propulsion_user_input = joy_msg.axes[4]    # Up-down Right joystick 
+        #if (-5000 <= propulsion_user_input <= 5000)
+        #    propulsion_user_input = 0
+
         steering_user_input   = joy_msg.axes[0]    # Left-right left joystick
         
         self.cmd_msg = Twist()             
                 
         # Software deadman switch
-        #If left button is active 
+        #If L1 is active 
         if (joy_msg.buttons[4]):
             
-            #If right button is active       
-            if (joy_msg.buttons[7]):   
-                # Fully Open-Loop
-                self.cmd_msg.linear.x  = propulsion_user_input * self.max_volt #[volts]
-                self.cmd_msg.angular.z = steering_user_input * self.cmd2rad
-                self.cmd_msg.linear.z  = 1   #CtrlChoice
-                
-            #If button A is active 
-            elif(joy_msg.buttons[1]):   
-                
-                # Closed-loop position, Open-loop steering
-                self.cmd_msg.linear.x  = propulsion_user_input # [m]
-                self.cmd_msg.angular.z = steering_user_input * self.cmd2rad
-                self.cmd_msg.linear.z  = 3  # Control mode
-                
-            #If button B is active 
-            # elif(joy_msg.buttons[2]):   
-                
-            #     # Closed-loop velocity, Closed-loop steering 
-            #     self.cmd_msg.linear.x  = propulsion_user_input * self.max_vel #[m/s]
-            #     self.cmd_msg.angular.z = steering_user_input # [m]
-            #     self.cmd_msg.linear.z  = 5  # Control mode
-                
-            #If button x is active 
-            elif(joy_msg.buttons[0]):   
-                
-                # Closed-loop velocity, Closed-loop steering
-                self.cmd_msg.linear.x  = propulsion_user_input * self.max_vel #[m/s]
-                self.cmd_msg.angular.z = steering_user_input # [m]
-                self.cmd_msg.linear.z  = 6  # Control mode
-                
-            #If button y is active 
-            elif(joy_msg.buttons[3]):   
-                
-                # Reset Encoder
-                self.cmd_msg.linear.x  = 0
-                self.cmd_msg.angular.z = 0
-                self.cmd_msg.linear.z  = 4  # Control mode
-                
-            #If left trigger is active 
-            elif (joy_msg.buttons[6]):
-                
-                # Template
-                self.cmd_msg.linear.x  = 0
-                self.cmd_msg.angular.z = 0
-                self.cmd_msg.linear.z  = 0 # Control mode
-                
-            #If both joy pushed
-            elif(joy_msg.buttons[11] and joy_msg.buttons[12]):
-                # Joystick disabled!
-                return;
-                
-            #If bottom arrow is active
-            elif(joy_msg.axes[7]):
-                
-                # Template
-                self.cmd_msg.linear.x  = 0
-                self.cmd_msg.angular.z = 0
-                self.cmd_msg.linear.z  = 0 # Control mode
-                
-            #If L1 is active 
-            elif (joy_msg.buttons[5]):
+            #If R1 is active 
+            if (joy_msg.buttons[5]):
                 
                 #If B button and R1 are active
-                if (joy_msg.button[2]):
+                if (joy_msg.buttons[1]):
                     # Template
                     self.cmd_msg.linear.x  = 0
                     self.cmd_msg.angular.z = 0
                     self.cmd_msg.linear.z  = 8 # Control mode
+
+                #If A button and R1 are active
+                elif (joy_msg.buttons[0]):
+                    # Template
+                    self.cmd_msg.linear.x  = 0
+                    self.cmd_msg.angular.z = 0
+                    self.cmd_msg.linear.z  = 9 # Control mode
+
+                #If X button and R1 are active
+                elif (joy_msg.buttons[2]):
+                    # Template
+                    self.cmd_msg.linear.x  = 0
+                    self.cmd_msg.angular.z = 0
+                    self.cmd_msg.linear.z  = 10 # Control mode
+
+                #If X button and R1 are active
+                elif (joy_msg.buttons[3]):
+                    # Template
+                    self.cmd_msg.linear.x  = 0
+                    self.cmd_msg.angular.z = 0
+                    self.cmd_msg.linear.z  = 11 # Control mode
                 
                 #If only R1 is active
                 else:
@@ -139,3 +103,4 @@ if __name__ == '__main__':
     rospy.init_node('teleop',anonymous=False)
     node = teleop()
     rospy.spin()
+
